@@ -16,3 +16,19 @@ class Signal():
             if not intensity is None:
                 self.intensity = intensity
 
+    def euclidian_distance(self, other: Signal) -> float:
+        distance = np.linalg.norm(self.intensity - other.intensity)
+        return 1 / (1 + distance)
+
+    def rmse(self, other: Signal) -> float:
+        rmse = np.sqrt(np.mean((self.intensity - other.intensity) ** 2))
+        return 1 / (1 + rmse)
+
+    def nrmse(self, other: Signal) -> float:
+        rmse = np.sqrt(np.mean((self.intensity - other.intensity) ** 2))
+        scale = np.max(self.intensity) - np.min(other.intensity)  # range of the signal
+        if scale == 0:
+            return 1.0 if rmse == 0 else 0.0
+        normalized_rmse = rmse / scale
+        return 1 / (1 + normalized_rmse)
+

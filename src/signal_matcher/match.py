@@ -1,5 +1,6 @@
 import numpy as np
 from functools import total_ordering
+import csv
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -24,6 +25,9 @@ class Match():
 
     def __lt__(self, other: Match) -> bool:
         return self.confidence < other.confidence
+
+    def time_window_to_str(self) -> str:
+        return f'{self.time_window[0]} - {self.time_window[-1]}'
 
 class Result():
     best_match: Match
@@ -78,4 +82,26 @@ class Result():
 class ResultSet():
     # Collection of samples paired with their top two matches
     data: dict[Signal, Result] = dict()
+
+    def to_csv(self, filepath: str) -> None:
+        content: list[list[str]] = [[
+            'Sample',
+            'Match 1 Reference',
+            'Match 1 Window',
+            'Match 2 Reference',
+            'Match 2 Window',
+            'Time to Compute (ns)'
+        ]]
+        for sample, result in self.data.items():
+            content.append([
+                sample.name,
+                result.best_match.reference.name,
+                result.best_match.time_window_to_str(),
+                result.second_best_match.reference.name,
+                result.second_best_match.time_window_to_str(),
+                str(result.time_to_compute)
+            ])
+        with open(filepath, "w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(content)
 

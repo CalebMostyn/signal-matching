@@ -2,10 +2,8 @@ import os
 import time
 from typing import Callable
 
-
 from signal_matcher.signal import Signal
 from signal_matcher.match import Match, Result, ResultSet 
-import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 def sliding_window_matching(samples: list[Signal], references: list[Signal],
@@ -66,5 +64,5 @@ if __name__ == "__main__":
             if file.is_file():
                 exp_signals.append(Signal(filepath=file.path))
 
-    sliding_window_matching(exp_signals, ref_signals, Signal.nrmse, True)
+    result = sliding_window_matching(exp_signals, ref_signals, Signal.nrmse, True)
 

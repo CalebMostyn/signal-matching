@@ -4,7 +4,7 @@ import numpy as np
 class Signal():
     time: np.array = None
     intensity: np.array = None
-    name: string = ""
+    name: str = ""
 
     def __init__(self, filepath: str = "", time: np.array = None, intensity: np.array = None) -> None:
         if filepath != "":

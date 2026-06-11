@@ -1,20 +1,19 @@
 import os
+import time
 from typing import Callable
 
-import matplotlib
-matplotlib.use('TkAgg')
-from matplotlib import pyplot as plt
 
 from signal_matcher.signal import Signal
-from signal_matcher.match import Match, MatchSet 
+from signal_matcher.match import Match, Result, ResultSet 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 def sliding_window_matching(samples: list[Signal], references: list[Signal],
                             compare_method: Callable[[Signal, Signal], float],
-                            visualize: bool = False) -> MatchSet:
-    result: MatchSet = MatchSet()
+                            visualize: bool = False) -> ResultSet:
+    result: ResultSet = ResultSet()
     for sample in samples:
+        start_ts: int = time.perf_counter_ns()
         # store the best match for each reference for finding the best overall matches
         best_matches: list[Match] = list()
         # Assumes no gaps in time
@@ -40,34 +39,17 @@ def sliding_window_matching(samples: list[Signal], references: list[Signal],
 
         # sort in descending order to find confidence closest to 1.0
         best_matches.sort(reverse=True)
+        
+        # store time to calculate
+        time_to_calculate: int = time.perf_counter_ns() - start_ts
+
         # store best matches in result
-        result.data[sample] = (best_matches[0], best_matches[1])
+        result.data[sample] = Result(best_matches[0], best_matches[1], time_to_calculate)
 
         # plot two best matches
         if visualize:
-            plot_matches(sample, result.data[sample])
+            result.data[sample].plot(sample)
     return result
-
-def plot_matches(signal, matches):
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), layout='constrained')
-    for ii in range(0, len(matches)):
-        match = matches[ii]
-        axs[ii].plot(match.reference.time, match.reference.intensity, label=f"ref:{match.reference.name}")
-        axs[ii].plot(match.time_window, signal.intensity, label=f"exp:{signal.name}")
-        axs[ii].set_title(f"Match {ii} - {match.reference.name}")
-        axs[ii].text(
-            0.98, 0.98, f"Confidence: {match.confidence:.5f}",
-            transform=axs[ii].transAxes,
-            ha='right', va='top',
-            fontsize=10,
-            bbox=dict(facecolor='white', alpha=0.6, edgecolor='none')
-        )
-        axs[ii].set_xlabel("Time")
-        axs[ii].set_ylabel("Intensity")
-
-    plt.tight_layout(rect=(0, 0, 1, 0.95))
-    fig.suptitle(f"Sample {signal.name}")
-    plt.show()
 
 if __name__ == "__main__":
     # Load reference signals
@@ -84,5 +66,5 @@ if __name__ == "__main__":
             if file.is_file():
                 exp_signals.append(Signal(filepath=file.path))
 
-    sliding_window_matching(exp_signals, ref_signals, Signal.nrmse, False)
+    sliding_window_matching(exp_signals, ref_signals, Signal.nrmse, True)
 

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from functools import total_ordering
 import csv
@@ -39,7 +40,7 @@ class Result():
         self.second_best_match = second_best
         self.time_to_compute = time
 
-    def plot(self, sample: Signal) -> None:
+    def plot(self, sample: Signal, filepath: str = '') -> None:
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), layout='constrained')
         axs[0].plot(self.best_match.reference.time, self.best_match.reference.intensity)
         axs[0].plot(self.best_match.time_window, sample.intensity)
@@ -77,7 +78,12 @@ class Result():
 
         plt.tight_layout(rect=(0, 0, 1, 0.95))
         fig.suptitle(f"Sample {sample.name}")
-        plt.show()
+
+        if filepath:
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            fig.savefig(filepath)
+        else:
+            plt.show()
 
 class ResultSet():
     # Collection of samples paired with their top two matches
@@ -101,6 +107,8 @@ class ResultSet():
                 result.second_best_match.time_window_to_str(),
                 str(result.time_to_compute)
             ])
+
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(content)

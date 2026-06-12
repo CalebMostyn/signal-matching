@@ -94,7 +94,10 @@ class Result():
 
 class ResultSet():
     # Collection of samples paired with their top two matches
-    data: dict[Signal, Result] = dict()
+    data: dict[Signal, Result]
+
+    def __init__(self) -> None:
+        self.data = {}
 
     def to_csv(self, filepath: str) -> None:
         content: list[list[str]] = [[

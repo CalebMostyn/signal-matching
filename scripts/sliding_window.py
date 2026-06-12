@@ -10,7 +10,8 @@ if __name__ == "__main__":
     compare_methods: list[Callable[[Signal, Signal], float]] = [
         Signal.euclidian_distance,
         Signal.rmse,
-        Signal.nrmse
+        Signal.nrmse,
+        Signal.pearson_correlation
     ]
     # solve with each comparison method
     for method in compare_methods:

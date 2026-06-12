@@ -32,3 +32,6 @@ class Signal():
         normalized_rmse = rmse / scale
         return 1 / (1 + normalized_rmse)
 
+    def pearson_correlation(self, other: Signal) -> float:
+        r = np.corrcoef(self.intensity, other.intensity)[0, 1]
+        return (r + 1) / 2

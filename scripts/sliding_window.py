@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     solver: Solver = Solver('data/experimental', 'data/reference')
     compare_methods: list[Callable[[Signal, Signal], float]] = [
-        Signal.euclidian_distance,
+        Signal.euclidean_distance,
         Signal.rmse,
         Signal.nrmse,
         Signal.pearson_correlation

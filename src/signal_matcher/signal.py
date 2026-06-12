@@ -16,7 +16,7 @@ class Signal():
             if not intensity is None:
                 self.intensity = intensity
 
-    def euclidian_distance(self, other: Signal) -> float:
+    def euclidean_distance(self, other: Signal) -> float:
         distance = np.linalg.norm(self.intensity - other.intensity)
         return 1 / (1 + distance)
 

@@ -1,6 +1,6 @@
 # signal-matching
 
-Python implementation of signal matcher. Estimates best two matches of a short, noisy signal to a longer signal from a set of references.
+Python implementation of a signal matcher. Estimates best two matches of a short, noisy signal to a longer signal from a set of references.
 
 ## Usage
 

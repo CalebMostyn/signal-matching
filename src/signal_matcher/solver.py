@@ -2,9 +2,12 @@ import os
 import time
 from typing import Callable
 
+import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+from scipy.signal import correlate, correlation_lags
+
 from signal_matcher.signal import Signal
 from signal_matcher.match import Match, Result, ResultSet 
-from numpy.lib.stride_tricks import sliding_window_view
 
 class Solver():
     samples: list[Signal] = []
@@ -63,6 +66,51 @@ class Solver():
             # store best matches in result
             result.data[sample] = Result(best_matches[0], best_matches[1], time_to_calculate)
     
+            # plot two best matches
+            if visualize:
+                result.data[sample].plot(sample)
+        return result
+
+    def cross_correlation_solver(self, compare_method: Callable[[Signal, Signal], float],
+                                 corr_method: str = 'fft', visualize: bool = False) -> ResultSet:
+        result: ResultSet = ResultSet()
+        for sample in self.samples:
+            start_ts: int = time.perf_counter_ns()
+            # store the best match for each reference for finding the best overall matches
+            best_matches: list[Match] = list()
+            for ref in self.references:
+
+                # compute cross correlation on z-score normalized data
+                corr: np.array = correlate(
+                    (ref.intensity - np.mean(ref.intensity)) / np.std(ref.intensity),
+                    (sample.intensity - np.mean(sample.intensity)) / np.std(sample.intensity),
+                    mode='valid',
+                    method=corr_method
+                )
+
+                # find best match
+                lags: np.array = correlation_lags(len(ref.intensity), len(sample.intensity), mode='valid')
+                # find window in reference from match
+                start: int = lags[np.argmax(corr)]
+                time_window: np.array = np.arange(start, start + len(sample.time), 1, dtype=float)
+                intensity_window: np.array = ref.intensity[np.searchsorted(ref.time, time_window)]
+                # compute confidence once on best match
+                sub_signal: Signal = Signal(intensity=intensity_window, time=time_window)
+                confidence: float = compare_method(sample, sub_signal)
+
+                # store match for this reference signal
+                match: Match = Match(ref, confidence, time_window)
+                best_matches.append(match)
+
+            # sort in descending order to find confidence closest to 1.0
+            best_matches.sort(reverse=True)
+            
+            # store time to calculate
+            time_to_calculate: int = time.perf_counter_ns() - start_ts
+        
+            # store best matches in result
+            result.data[sample] = Result(best_matches[0], best_matches[1], time_to_calculate)
+
             # plot two best matches
             if visualize:
                 result.data[sample].plot(sample)

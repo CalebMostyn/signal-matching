@@ -30,6 +30,12 @@ class Match():
     def time_window_to_str(self) -> str:
         return f'{self.time_window[0]} - {self.time_window[-1]}'
 
+    @staticmethod
+    def time_window_from_str(s: str) -> np.array:
+        start, end = map(float, s.split("-"))
+        return np.arange(start, end + 1, 1, dtype=float)
+
+
 class Result():
     best_match: Match
     second_best_match: Match
@@ -94,8 +100,10 @@ class ResultSet():
         content: list[list[str]] = [[
             'Sample',
             'Match 1 Reference',
+            'Match 1 Confidence',
             'Match 1 Window',
             'Match 2 Reference',
+            'Match 2 Confidence',
             'Match 2 Window',
             'Time to Compute (ns)'
         ]]
@@ -103,8 +111,10 @@ class ResultSet():
             content.append([
                 sample.name,
                 result.best_match.reference.name,
+                str(result.best_match.confidence),
                 result.best_match.time_window_to_str(),
                 result.second_best_match.reference.name,
+                str(result.second_best_match.confidence),
                 result.second_best_match.time_window_to_str(),
                 str(result.time_to_compute)
             ])
@@ -113,4 +123,28 @@ class ResultSet():
         with open(filepath, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(content)
+
+    # actual signal data is lost on save, just loads filenames
+    def from_csv(self, filepath: str) -> None:
+        with open(filepath, newline="") as file:
+            reader = csv.reader(file)
+            # skip headers
+            headers = next(reader)
+            for row in reader:
+                signal: Signal = Signal()
+                signal.name = row[0]
+
+                best_match_ref: Signal = Signal()
+                best_match_ref.name = row[1]
+                best_match_time_window: np.array = Match.time_window_from_str(row[3])
+                best_match: Match = Match(best_match_ref, float(row[2]), best_match_time_window)
+
+                second_best_match_ref: Signal = Signal()
+                second_best_match_ref.name = row[4]
+                second_best_match_time_window: np.array = Match.time_window_from_str(row[6])
+                second_best_match: Match = Match(second_best_match_ref, float(row[5]), second_best_match_time_window)
+
+                time_to_compute: int = int(row[7])
+
+                self.data[signal] = Result(best_match, second_best_match, time_to_compute)
 

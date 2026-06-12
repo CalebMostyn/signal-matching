@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # use both sliding time-domain method and frequency domain method
     corr_methods: list[str] = ['direct', 'fft']
     for corr_method in corr_methods:
-        results: ResultSet = solver.cross_correlation_solver(Signal.nrmse, corr_method=corr_method)
+        results: ResultSet = solver.cross_correlation_solve(Signal.nrmse, corr_method=corr_method)
         # generate csv from results
         results.to_csv(f'results/cross_correlation_{corr_method}.csv')
         # generate plots from each result

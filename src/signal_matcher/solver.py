@@ -71,7 +71,7 @@ class Solver():
                 result.data[sample].plot(sample)
         return result
 
-    def cross_correlation_solver(self, compare_method: Callable[[Signal, Signal], float],
+    def cross_correlation_solve(self, compare_method: Callable[[Signal, Signal], float],
                                  corr_method: str = 'fft', visualize: bool = False) -> ResultSet:
         result: ResultSet = ResultSet()
         for sample in self.samples:

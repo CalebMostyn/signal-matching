@@ -63,17 +63,17 @@ Without an actual ground truth, I used what I perceived to be the best results t
 
 ### Example Output
 
-![Distance Output](plots/euclidean_distance/exp_signal0.csv.png)
+![Distance Output](plots/euclidean_distance/exp_signal17.csv.png)
 
-![RMSE Output](plots/rmse/exp_signal0.csv.png)
+![RMSE Output](plots/rmse/exp_signal17.csv.png)
 
-![NRMSE Output](plots/nrmse/exp_signal0.csv.png)
+![NRMSE Output](plots/nrmse/exp_signal17.csv.png)
 
-![Pearson Correlation Output](plots/pearson_correlation/exp_signal0.csv.png)
+![Pearson Correlation Output](plots/pearson_correlation/exp_signal17.csv.png)
 
-![Cross Correlation (Windowed) Output](plots/cross_correlation_direct/exp_signal0.csv.png)
+![Cross Correlation (Windowed) Output](plots/cross_correlation_direct/exp_signal17.csv.png)
 
-![Cross Correlation (FFT) Output](plots/cross_correlation_fft/exp_signal0.csv.png)
+![Cross Correlation (FFT) Output](plots/cross_correlation_fft/exp_signal17.csv.png)
 
 
 ## Futures

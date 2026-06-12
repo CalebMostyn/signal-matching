@@ -14,5 +14,5 @@ if __name__ == "__main__":
         results.to_csv(f'results/cross_correlation_{corr_method}.csv')
         # generate plots from each result
         for sample, result in results.data.items():
-            result.plot(sample, f'plots/cross_correlation_{corr_method}/{sample.name}.png')
+            result.plot(sample, f'plots/cross_correlation_{corr_method}/{sample.name}.png', f'Cross Correlation {corr_method} - ')
 

@@ -20,6 +20,6 @@ if __name__ == "__main__":
         results.to_csv(f'results/{method.__name__}.csv')
         # generate plots from each result
         for sample, result in results.data.items():
-            result.plot(sample, f'plots/{method.__name__}/{sample.name}.png')
+            result.plot(sample, f'plots/{method.__name__}/{sample.name}.png', f'Sliding Window {method.__name__} - ')
 
 

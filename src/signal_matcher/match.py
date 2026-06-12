@@ -40,7 +40,7 @@ class Result():
         self.second_best_match = second_best
         self.time_to_compute = time
 
-    def plot(self, sample: Signal, filepath: str = '') -> None:
+    def plot(self, sample: Signal, filepath: str = '', title: str = '') -> None:
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), layout='constrained')
         axs[0].plot(self.best_match.reference.time, self.best_match.reference.intensity)
         axs[0].plot(self.best_match.time_window, sample.intensity)
@@ -77,13 +77,14 @@ class Result():
         )
 
         plt.tight_layout(rect=(0, 0, 1, 0.95))
-        fig.suptitle(f"Sample {sample.name}")
+        fig.suptitle(f"{title}Sample {sample.name}")
 
         if filepath:
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             fig.savefig(filepath)
         else:
             plt.show()
+        plt.close(fig)
 
 class ResultSet():
     # Collection of samples paired with their top two matches

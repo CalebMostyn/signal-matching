@@ -11,42 +11,120 @@ from signal_matcher.signal import Signal
 
 @total_ordering
 class Match():
-    # Signal matched to, confidence, and time location of the match
+    """
+    Class for storing a matched signal.
+
+    Attributes:
+        reference : Signal
+            Signal that was matched to.
+        confidence : float
+            Similarity to matched signal.
+        time_window : np.array
+            Time window of reference signal that was matched to.
+    """
     reference: Signal
     confidence: float
     time_window: np.array
 
     def __init__(self, reference: Signal, confidence: float, time_window: np.array) -> None:
+        """
+        Initializes a match.
+
+        Args:
+            reference : Reference signal that was matched to.
+            confidence : Similarity to matched signal.
+            time_window : Time window of reference signal that was matched to.
+        """
         self.reference = reference
         self.confidence = confidence
         self.time_window = time_window
 
     def __eq__(self, other: Match) -> bool:
+        """
+        Match equals method. Comparison determined purely by confidence score.
+
+        Args:
+            other : Match object to compare to.
+        Returns:
+            True if confidence values are equal, otherwise false.
+        """
         return self.confidence == other.confidence
 
     def __lt__(self, other: Match) -> bool:
+        """
+        Match less than method. Comparison determined purely by confidence score.
+
+        Args:
+            other : Match object to compare to.
+        Returns:
+            True if confidence is less than other match's, otherwise false.
+        """
         return self.confidence < other.confidence
 
     def time_window_to_str(self) -> str:
+        """
+        Converts time window array to string.
+
+        Returns:
+            Time window array formatted as 'start_value - end_value'
+        """
         return f'{self.time_window[0]} - {self.time_window[-1]}'
 
     @staticmethod
     def time_window_from_str(s: str) -> np.array:
+        """
+        Converts formatted time window string back into an array.
+        Assumes a sample rate of 1 Hz.
+        
+        Args:
+            s : Time window string formatted as 'start_value - end_value'
+        Returns:
+            Array of time values from the start value to end value. 
+        """
         start, end = map(float, s.split("-"))
         return np.arange(start, end + 1, 1, dtype=float)
 
 
 class Result():
+    """
+    Class for storing a signal matching result.
+
+    Attributes:
+        best_match: Match
+            Match with best confidence score.
+        second_best_match: Match
+            Match with second best confidence score.
+        time_to_compute: int
+            Time to compute result in nanoseconds.
+    """
     best_match: Match
     second_best_match: Match
-    time_to_compute: int # measured in nanoseconds
+    time_to_compute: int
 
     def __init__(self, best: Match, second_best: Match, time: int) -> None:
+        """
+        Initializes a result.
+
+        Args:
+            best : Match object with best confidence score.
+            second_best : Match object with second best confidence score.
+            time : Time to compute result, in nanoseconds.
+        """
         self.best_match = best
         self.second_best_match = second_best
         self.time_to_compute = time
 
     def plot(self, sample: Signal, filepath: str = '', title: str = '') -> None:
+        """
+        Creates a plot of a result. Displays the sample signal overtop the matched
+        references alongside the confidence scores and time to compute.
+        Either displays the plot or saves it to a file.
+
+        Args:
+            sample : Sample signal that was matched with a given result.
+            filepath : Optional path to file to save to. If not provided, plot is just displayed.
+            title : Optional string added to the title of the plot, prior to 'Sample - sample.name'
+        """
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), layout='constrained')
         axs[0].plot(self.best_match.reference.time, self.best_match.reference.intensity)
         axs[0].plot(self.best_match.time_window, sample.intensity)
@@ -93,13 +171,26 @@ class Result():
         plt.close(fig)
 
 class ResultSet():
-    # Collection of samples paired with their top two matches
+    """
+    Class for storing a set of samples and resulting matches.
+
+    Attributes:
+        data : dict[Signal, Result]
+            Dictionary matching signals to their resulting matches.
+    """
     data: dict[Signal, Result]
 
     def __init__(self) -> None:
+        """ Initializes a result set. """
         self.data = {}
 
     def to_csv(self, filepath: str) -> None:
+        """
+        Converts the result set to CSV file. Results in loss of actual signal data.
+
+        Args:
+            filepath : Path to save resulting CSV file at.
+        """
         content: list[list[str]] = [[
             'Sample',
             'Match 1 Reference',
@@ -127,8 +218,14 @@ class ResultSet():
             writer = csv.writer(file)
             writer.writerows(content)
 
-    # actual signal data is lost on save, just loads filenames
     def from_csv(self, filepath: str) -> None:
+        """
+        Loads data into result set from CSV file. Signals created only contain
+        name and time window data due to lossy conversion at save.
+
+        Args:
+            filepath : Path to CSV file to load from.
+        """
         with open(filepath, newline="") as file:
             reader = csv.reader(file)
             # skip headers

@@ -2,11 +2,31 @@ import os
 import numpy as np
 
 class Signal():
-    time: np.array = None
+    """
+    Generic class for storing signal data.
+
+    Attributes:
+        intensity : np.array
+            1D array containing signal intensity values.
+        time : np.array
+            1D array containing corresponding time data to intensity values.
+        name : str
+            Optional name for identifying signal.
+    """
+
     intensity: np.array = None
+    time: np.array = None
     name: str = ""
 
     def __init__(self, filepath: str = "", time: np.array = None, intensity: np.array = None) -> None:
+        """
+        Initializes a signal, either from a CSV file, directly from time and intensity arrays, or without values at all.
+
+        Args:
+            filepath : Path to file to load from. Should contain column 0 with time values and column 1 with intensity values.
+            time : 1D array of time values.
+            intensity : 1D array of intensity values.
+        """
         if filepath != "":
             self.name = os.path.basename(filepath)
             self.time, self.intensity = np.loadtxt(filepath, delimiter=",", skiprows=1, unpack=True)
@@ -17,14 +37,38 @@ class Signal():
                 self.intensity = intensity
 
     def euclidean_distance(self, other: Signal) -> float:
+        """
+        Computes similarity between two signals based on distance.
+        
+        Args:
+            other : Signal object to compare to.
+        Returns:
+            Similarity between 0 and 1.
+        """
         distance = np.linalg.norm(self.intensity - other.intensity)
         return 1 / (1 + distance)
 
     def rmse(self, other: Signal) -> float:
+        """
+        Computes similarity between two signals based on root mean square error.
+        
+        Args:
+            other : Signal object to compare to.
+        Returns:
+            Similarity between 0 and 1.
+        """
         rmse = np.sqrt(np.mean((self.intensity - other.intensity) ** 2))
         return 1 / (1 + rmse)
 
     def nrmse(self, other: Signal) -> float:
+        """
+        Computes similarity between two signals based on normalized root mean square error.
+        
+        Args:
+            other : Signal object to compare to.
+        Returns:
+            Similarity between 0 and 1.
+        """
         rmse = np.sqrt(np.mean((self.intensity - other.intensity) ** 2))
         scale = np.max(self.intensity) - np.min(other.intensity)  # range of the signal
         if scale == 0:
@@ -33,6 +77,14 @@ class Signal():
         return 1 / (1 + normalized_rmse)
 
     def pearson_correlation(self, other: Signal) -> float:
+        """
+        Computes similarity between two signals based on the Pearson correlation.
+        
+        Args:
+            other : Signal object to compare to.
+        Returns:
+            Similarity between 0 and 1.
+        """
         r = np.corrcoef(self.intensity, other.intensity)[0, 1]
         return (r + 1) / 2
 

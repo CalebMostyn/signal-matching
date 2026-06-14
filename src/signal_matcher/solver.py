@@ -10,13 +10,39 @@ from signal_matcher.signal import Signal
 from signal_matcher.match import Match, Result, ResultSet 
 
 class Solver():
+    """
+    Class for generating result sets from a set of sample signals and
+    a set of refrence signals.
+
+    Attributes:
+        samples : list[Signal]
+            List of sample signals to generate results for.
+        references : list[Signal]
+            List of refrence signals to match samples to.
+    """
     samples: list[Signal] = []
     references: list[Signal] = []
 
     def __init__(self, sample_dir: str, ref_dir: str) -> None:
+        """
+        Initializes a solver. Loads all signals from directory of 
+        samples and directory of references.
+
+        Args:
+            sample_dir : Path to directory containing sample data as CSV's.
+            ref_dir : Path to directory containing reference data as CSV's.
+        """
         self.load_data(sample_dir, ref_dir)
 
     def load_data(self, sample_dir: str, ref_dir: str) -> None:
+        """
+        Loads sample and reference data from given directories.
+        Assumes all files in the directories are valid signals.
+
+        Args:
+            sample_dir : Path to directory containing sample data as CSV's.
+            ref_dir : Path to directory containing reference data as CSV's.
+        """
         # Load sample signals
         with os.scandir(sample_dir) as files:
             for file in files:
@@ -31,6 +57,17 @@ class Solver():
 
     def sliding_window_solve(self, compare_method: Callable[[Signal, Signal], float],
                                 visualize: bool = False) -> ResultSet:
+        """
+        Generates a result set containing results for each sample signal
+        using a brute-force, sliding window algorithm.
+
+        Args:
+            compare_method : Signal method to compute confidence of matches.
+            visualize : Flag to display a plot of each result after computed.
+        Return:
+            A result set containing results for each sample in samples based on the reference
+            signals in references.
+        """
         result: ResultSet = ResultSet()
         for sample in self.samples:
             start_ts: int = time.perf_counter_ns()
@@ -44,7 +81,7 @@ class Solver():
                 # shorter than the reference
                 intensity_windows = sliding_window_view(ref.intensity, window_shape=window_size)
                 time_windows = sliding_window_view(ref.time, window_shape=window_size)
-    
+
                 best_match: Match = None
                 for ii in range(0, len(time_windows)):
                     windowed_ref = Signal(time=time_windows[ii], intensity=intensity_windows[ii])
@@ -53,19 +90,19 @@ class Solver():
                     # compare this match's confidence to current best
                     if best_match is None or match >= best_match:
                         best_match = match
-    
+
                 # best match for this reference has been found
                 best_matches.append(best_match)
-    
+
             # sort in descending order to find confidence closest to 1.0
             best_matches.sort(reverse=True)
-            
+
             # store time to calculate
             time_to_calculate: int = time.perf_counter_ns() - start_ts
-    
+
             # store best matches in result
             result.data[sample] = Result(best_matches[0], best_matches[1], time_to_calculate)
-    
+
             # plot two best matches
             if visualize:
                 result.data[sample].plot(sample)
@@ -73,6 +110,18 @@ class Solver():
 
     def cross_correlation_solve(self, compare_method: Callable[[Signal, Signal], float],
                                  corr_method: str = 'fft', visualize: bool = False) -> ResultSet:
+        """
+        Generates a result set containing results for each sample signal
+        using cross correlation with a given method.
+
+        Args:
+            compare_method : Signal method to compute confidence of matches.
+            corr_method : Method for cross correlation, ex. 'direct' or 'fft'. See scipy.signal.correlate.
+            visualize : Flag to display a plot of each result after computed.
+        Return:
+            A result set containing results for each sample in samples based on the reference
+            signals in references.
+        """
         result: ResultSet = ResultSet()
         for sample in self.samples:
             start_ts: int = time.perf_counter_ns()
@@ -104,10 +153,10 @@ class Solver():
 
             # sort in descending order to find confidence closest to 1.0
             best_matches.sort(reverse=True)
-            
+
             # store time to calculate
             time_to_calculate: int = time.perf_counter_ns() - start_ts
-        
+
             # store best matches in result
             result.data[sample] = Result(best_matches[0], best_matches[1], time_to_calculate)
 

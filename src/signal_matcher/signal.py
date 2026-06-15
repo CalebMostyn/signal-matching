@@ -1,5 +1,7 @@
 import os
+import math
 import numpy as np
+from scipy.signal import resample_poly
 
 class Signal():
     """
@@ -10,12 +12,15 @@ class Signal():
             1D array containing signal intensity values.
         time : np.array
             1D array containing corresponding time data to intensity values.
+        sampling_rate : float
+            Sampling rate of signal (i.e. time delta between intensities). Measured in Hz.
         name : str
             Optional name for identifying signal.
     """
 
     intensity: np.array = None
     time: np.array = None
+    sampling_rate : float = 1.0
     name: str = ""
 
     def __init__(self, filepath: str = "", time: np.array = None, intensity: np.array = None) -> None:
@@ -35,6 +40,25 @@ class Signal():
                 self.time = time
             if not intensity is None:
                 self.intensity = intensity
+
+    def resample(self, sampling_rate: float) -> None:
+        """
+        Resamples a signal to a given sampling rate in Hz.
+
+        Args:
+            sampling_rate : New sampling rate in Hz.
+        """
+        # reduce ratio to integers (important for polyphase filtering)
+        gcd = math.gcd(int(round(sampling_rate)), int(round(self.sampling_rate)))
+        up = int(sampling_rate // gcd)
+        down = int(self.sampling_rate // gcd)
+
+        # resample signal
+        self.intensity = resample_poly(self.intensity, up, down)
+        self.time = np.arange(len(self.intensity)) / sampling_rate
+
+        # update sampling rate
+        self.sampling_rate = sampling_rate
 
     def euclidean_distance(self, other: Signal) -> float:
         """

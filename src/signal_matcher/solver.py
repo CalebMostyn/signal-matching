@@ -76,6 +76,7 @@ class Solver():
             # Assumes no gaps in time
             window_size: int = len(sample.time)
             for ref in self.references:
+                sample.resample(ref.sampling_rate)
                 # Compare points in experimental signal to points in the reference,
                 # sliding over all possible time windows as the sample is
                 # shorter than the reference
@@ -128,6 +129,12 @@ class Solver():
             # store the best match for each reference for finding the best overall matches
             best_matches: list[Match] = list()
             for ref in self.references:
+                # Ensure same sample rate between signals
+                sample.resample(ref.sampling_rate)
+
+                # Cannot have a match if sample is longer than reference
+                if len(sample.intensity) > len(ref.intensity):
+                    continue
 
                 # compute cross correlation on z-score normalized data
                 corr: np.array = correlate(
@@ -140,9 +147,17 @@ class Solver():
                 # find best match
                 lags: np.array = correlation_lags(len(ref.intensity), len(sample.intensity), mode='valid')
                 # find window in reference from match
-                start: int = lags[np.argmax(corr)]
-                time_window: np.array = np.arange(start, start + len(sample.time), 1, dtype=float)
-                intensity_window: np.array = ref.intensity[np.searchsorted(ref.time, time_window)]
+                start_idx = np.argmax(corr)
+                end_idx = start_idx + len(sample.intensity)
+
+                if end_idx > len(ref.intensity):
+                    end_idx = len(ref.intensity) - 1
+
+                intensity_window = ref.intensity[start_idx:end_idx]
+                time_window = ref.time[start_idx:end_idx]
+                # start: int = lags[np.argmax(corr)]
+                # time_window: np.array = np.arange(start, start + len(sample.intensity), dtype=float) / ref.sampling_rate
+                # intensity_window: np.array = ref.intensity[np.searchsorted(ref.time, time_window)]
                 # compute confidence once on best match
                 sub_signal: Signal = Signal(intensity=intensity_window, time=time_window)
                 confidence: float = compare_method(sample, sub_signal)

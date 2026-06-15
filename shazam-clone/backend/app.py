@@ -4,7 +4,6 @@ from fastapi import FastAPI, UploadFile, File
 
 from signal_matcher.signal import Signal
 from signal_matcher.sound import Sound
-from signal_matcher.solver import Solver
 from song_solver import SongSolver
 
 solver = SongSolver("../songs")
@@ -17,7 +16,7 @@ async def upload_file(file: UploadFile = File(...)):
 
     audio_buffer = io.BytesIO(contents)
     sound = Sound(audio_buffer=audio_buffer)
-    result = solver.cross_correlation_solve(sound, Signal.nrmse)
+    result = solver.cross_correlation_solve(sound, Signal.pearson_correlation, 'auto')
 
     return {
         "match": result.best_match.reference.name,

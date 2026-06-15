@@ -1,6 +1,7 @@
 import io
 
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 
 from signal_matcher.signal import Signal
 from signal_matcher.sound import Sound
@@ -10,9 +11,21 @@ solver = SongSolver("../songs")
 
 app = FastAPI()
 
+# CORS policy for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:9000",
+        "http://127.0.0.1:9000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/match-song")
-async def upload_file(file: UploadFile = File(...)):
-    contents = await file.read()
+async def upload_file(audio: UploadFile = File(...)):
+    contents = await audio.read()
 
     audio_buffer = io.BytesIO(contents)
     sound = Sound(audio_buffer=audio_buffer)
